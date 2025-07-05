@@ -1,6 +1,9 @@
 import React from 'react';
 import { HomeIcon, LayoutDashboardIcon, FileIcon, FileTextIcon, MessageSquareIcon, SettingsIcon, HelpCircleIcon, LogOutIcon, ChevronDownIcon } from 'lucide-react';
-const Sidebar = () => {
+const Sidebar = ({
+  onNavigation,
+  activePage = 'dashboard'
+}) => {
   return <div className="w-80 bg-blue-500 text-white flex flex-col h-full">
       <div className="p-6">
         <h1 className="text-2xl font-bold">WeCount</h1>
@@ -18,13 +21,13 @@ const Sidebar = () => {
         </div>
       </div>
       <nav className="flex-1">
-        <NavItem icon={<HomeIcon size={20} />} label="Launchpad" active={false} />
-        <NavItem icon={<LayoutDashboardIcon size={20} />} label="Dashboard" active={false} />
-        <NavItem icon={<FileIcon size={20} />} label="Files" active={true} />
-        <NavItem icon={<FileTextIcon size={20} />} label="Statements" active={false} />
-        <NavItem icon={<MessageSquareIcon size={20} />} label="Messages" active={false} badge="4" />
-        <NavItem icon={<SettingsIcon size={20} />} label="Settings" active={false} />
-        <NavItem icon={<HelpCircleIcon size={20} />} label="Help" active={false} />
+        <NavItem icon={<HomeIcon size={20} />} label="Launchpad" active={activePage === 'launchpad'} onClick={() => onNavigation('launchpad')} />
+        <NavItem icon={<LayoutDashboardIcon size={20} />} label="Dashboard" active={activePage === 'dashboard'} onClick={() => onNavigation('dashboard')} />
+        <NavItem icon={<FileIcon size={20} />} label="Files" active={activePage === 'files'} onClick={() => onNavigation('files')} />
+        <NavItem icon={<FileTextIcon size={20} />} label="Statements" active={activePage === 'statements'} onClick={() => onNavigation('statements')} />
+        <NavItem icon={<MessageSquareIcon size={20} />} label="Messages" active={activePage === 'messages'} onClick={() => onNavigation('messages')} badge="4" />
+        <NavItem icon={<SettingsIcon size={20} />} label="Settings" active={activePage === 'settings'} onClick={() => onNavigation('settings')} />
+        <NavItem icon={<HelpCircleIcon size={20} />} label="Help" active={activePage === 'help'} onClick={() => onNavigation('help')} />
       </nav>
       <div className="p-4 mt-auto">
         <button className="flex items-center text-white opacity-80 hover:opacity-100">
@@ -38,9 +41,10 @@ const NavItem = ({
   icon,
   label,
   active,
-  badge
+  badge,
+  onClick
 }) => {
-  return <div className={`flex items-center p-4 ${active ? 'bg-blue-600' : 'hover:bg-blue-600'}`}>
+  return <div className={`flex items-center p-4 cursor-pointer ${active ? 'bg-blue-600' : 'hover:bg-blue-600'}`} onClick={onClick}>
       <div className="mr-3">{icon}</div>
       <span>{label}</span>
       {badge && <div className="ml-auto bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">

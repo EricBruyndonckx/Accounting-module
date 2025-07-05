@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { XIcon, TagIcon, BarChartIcon, PlusIcon, TrashIcon, EditIcon, FolderIcon, UsersIcon, DollarSignIcon, CheckIcon } from 'lucide-react';
-// Données de test
+import React, { useState } from 'react';
+import { XIcon, TagIcon, BarChartIcon, PlusIcon, TrashIcon, EditIcon, UsersIcon, FolderIcon, DollarSignIcon, CheckCircleIcon, ChevronUpIcon, CheckIcon } from 'lucide-react';
+// Données de test (les mêmes que dans AnalyticsPanel.tsx)
 const projectOptions = [{
   id: 1,
   name: 'Projet Alpha'
@@ -37,8 +37,8 @@ const clientOptions = [{
   id: 3,
   name: 'Eric'
 }];
-const AnalyticsPanel = ({
-  document,
+const BulkAnalyticsPanel = ({
+  selectedCount,
   onClose,
   onSave
 }) => {
@@ -46,15 +46,15 @@ const AnalyticsPanel = ({
   const [analyticalAxes, setAnalyticalAxes] = useState([{
     id: 1,
     name: 'Projet',
-    icon: <BarChartIcon size={16} className="text-blue-500" />,
-    iconId: 'chart',
+    icon: <FolderIcon size={16} className="text-blue-500" />,
+    iconId: 'folder',
     color: 'text-blue-500',
     sections: projectOptions
   }, {
     id: 2,
     name: 'Département',
-    icon: <TagIcon size={16} className="text-green-500" />,
-    iconId: 'tag',
+    icon: <BarChartIcon size={16} className="text-green-500" />,
+    iconId: 'chart',
     color: 'text-green-500',
     sections: departmentOptions
   }, {
@@ -119,7 +119,7 @@ const AnalyticsPanel = ({
       name: 'Basse'
     }]
   }]);
-  // État pour les sélections actuelles (maintenant un objet avec des tableaux pour les valeurs multiples)
+  // État pour les sélections actuelles (modifié pour supporter les sélections multiples)
   const [documentAxes, setDocumentAxes] = useState({});
   // État pour la création/édition d'axes
   const [isCreatingAxis, setIsCreatingAxis] = useState(false);
@@ -128,55 +128,8 @@ const AnalyticsPanel = ({
   const [newAxisName, setNewAxisName] = useState('');
   const [newSectionName, setNewSectionName] = useState('');
   const [editingAxis, setEditingAxis] = useState(null);
-  const [selectedIcon, setSelectedIcon] = useState('tag');
   // État pour gérer l'affichage des sections
   const [expandedAxes, setExpandedAxes] = useState({});
-  // Liste des icônes disponibles
-  const availableIcons = [{
-    id: 'tag',
-    icon: <TagIcon size={16} className="text-gray-500" />,
-    label: 'Tag'
-  }, {
-    id: 'chart',
-    icon: <BarChartIcon size={16} className="text-blue-500" />,
-    label: 'Graphique'
-  }, {
-    id: 'folder',
-    icon: <FolderIcon size={16} className="text-yellow-500" />,
-    label: 'Dossier'
-  }, {
-    id: 'user',
-    icon: <UsersIcon size={16} className="text-purple-500" />,
-    label: 'Utilisateur'
-  }, {
-    id: 'dollar',
-    icon: <DollarSignIcon size={16} className="text-green-500" />,
-    label: 'Finance'
-  }];
-  // Fonction pour obtenir l'icône par son ID
-  const getIconById = iconId => {
-    const found = availableIcons.find(item => item.id === iconId);
-    return found ? found.icon : availableIcons[0].icon;
-  };
-  // Initialiser les sélections à partir du document
-  useEffect(() => {
-    if (document && document.analyticalAxes) {
-      const axesMap = {};
-      // Regrouper les axes par type
-      document.analyticalAxes.forEach(axis => {
-        if (axis.type && axis.name) {
-          if (!axesMap[axis.type]) {
-            axesMap[axis.type] = [];
-          }
-          // Ajouter le nom à la liste des valeurs pour ce type
-          if (!axesMap[axis.type].includes(axis.name)) {
-            axesMap[axis.type].push(axis.name);
-          }
-        }
-      });
-      setDocumentAxes(axesMap);
-    }
-  }, [document]);
   // Ajouter un nouvel axe
   const handleAddAxis = () => {
     if (analyticalAxes.length >= 8) {
@@ -191,9 +144,7 @@ const AnalyticsPanel = ({
       // Mode édition
       setAnalyticalAxes(analyticalAxes.map(axis => axis.id === editingAxis.id ? {
         ...axis,
-        name: newAxisName,
-        icon: getIconById(selectedIcon),
-        iconId: selectedIcon
+        name: newAxisName
       } : axis));
       setEditingAxis(null);
     } else {
@@ -201,21 +152,19 @@ const AnalyticsPanel = ({
       const newAxis = {
         id: Date.now(),
         name: newAxisName,
-        icon: getIconById(selectedIcon),
-        iconId: selectedIcon,
+        icon: <TagIcon size={16} className="text-gray-500" />,
         color: 'text-gray-500',
         sections: []
       };
       setAnalyticalAxes([...analyticalAxes, newAxis]);
     }
     setNewAxisName('');
-    setSelectedIcon('tag');
     setIsCreatingAxis(false);
   };
   // Supprimer un axe
   const handleDeleteAxis = axisId => {
     setAnalyticalAxes(analyticalAxes.filter(axis => axis.id !== axisId));
-    // Mettre à jour les sélections du document
+    // Mettre à jour les sélections
     const updatedAxes = {
       ...documentAxes
     };
@@ -228,7 +177,6 @@ const AnalyticsPanel = ({
   // Éditer un axe
   const handleEditAxis = axis => {
     setNewAxisName(axis.name);
-    setSelectedIcon(axis.iconId || 'tag');
     setEditingAxis(axis);
     setIsCreatingAxis(true);
   };
@@ -257,7 +205,7 @@ const AnalyticsPanel = ({
     setIsCreatingSection(false);
     setCurrentAxisForSection(null);
   };
-  // Gérer le changement de sélection d'axe pour un document (sélection multiple)
+  // Gérer le changement de sélection d'axe (sélection multiple)
   const handleAxisSelectionChange = (axisName, sectionName) => {
     setDocumentAxes(prev => {
       const currentSelections = prev[axisName] || [];
@@ -286,65 +234,41 @@ const AnalyticsPanel = ({
   };
   // Enregistrer les modifications
   const handleSave = () => {
-    // Convertir les sélections en format attendu
-    const updatedAxes = [];
-    // Pour chaque type d'axe avec des sélections
-    Object.entries(documentAxes).forEach(([type, names]) => {
-      // Pour chaque nom sélectionné pour ce type
-      if (Array.isArray(names)) {
-        names.forEach(name => {
-          if (name) {
-            // Ignorer les valeurs vides
-            updatedAxes.push({
-              type,
-              name
-            });
-          }
-        });
-      }
-    });
-    // Créer une copie mise à jour du document
-    const updatedDocument = {
-      ...document,
-      analyticalAxes: updatedAxes
-    };
-    // Si onSave est fourni, appeler la fonction avec le document mis à jour
-    if (onSave) {
-      onSave(updatedDocument);
-    }
-    // Fermer le panneau
-    onClose();
+    // Appeler la fonction onSave avec les axes analytiques à appliquer
+    onSave(documentAxes);
   };
   return <div className="w-80 bg-white border-l border-gray-200 h-full overflow-auto flex flex-col shadow-lg">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-        <h2 className="font-medium">Détails du document</h2>
+        <h2 className="font-medium">Édition en masse</h2>
         <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
           <XIcon size={20} />
         </button>
       </div>
       <div className="p-4">
         <div className="mb-6">
-          <p className="text-sm text-gray-500 mb-1">Document</p>
-          <p className="font-medium">{document.description}</p>
-          <div className="flex items-center mt-2">
-            <span className="text-sm text-gray-500 mr-2">Montant:</span>
-            <span className="font-medium">
-              {document.amount.toFixed(2)} {document.currency}
-            </span>
-          </div>
-          <div className="flex items-center mt-1">
-            <span className="text-sm text-gray-500 mr-2">Date:</span>
-            <span className="font-medium">{document.date}</span>
+          <div className="px-4 py-3 bg-blue-50 border border-blue-100 rounded-md flex items-center mb-4">
+            <div className="mr-3 bg-blue-100 rounded-full p-2">
+              <TagIcon size={16} className="text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-800">
+                {selectedCount} document{selectedCount > 1 ? 's' : ''}{' '}
+                sélectionné{selectedCount > 1 ? 's' : ''}
+              </p>
+              <p className="text-xs text-blue-600">
+                Les modifications seront appliquées à tous les documents
+                sélectionnés
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-between mb-3 border-b pb-2">
-          <h3 className="font-medium">Axes analytiques</h3>
+          <h3 className="font-medium">Axes analytiques à appliquer</h3>
           <button onClick={() => {
           if (analyticalAxes.length < 8) {
             setIsCreatingAxis(true);
             setEditingAxis(null);
             setNewAxisName('');
-            setSelectedIcon('tag');
           } else {
             alert('Vous ne pouvez pas ajouter plus de 8 axes analytiques.');
           }
@@ -359,16 +283,6 @@ const AnalyticsPanel = ({
               {editingAxis ? "Modifier l'axe" : 'Nouvel axe analytique'}
             </h4>
             <input type="text" placeholder="Nom de l'axe" value={newAxisName} onChange={e => setNewAxisName(e.target.value)} className="w-full p-2 border border-gray-300 rounded-md text-sm mb-2" />
-            {/* Sélecteur d'icône */}
-            <div className="mb-3">
-              <label className="block text-sm text-gray-600 mb-1">Icône</label>
-              <div className="flex flex-wrap gap-2">
-                {availableIcons.map(iconOption => <button key={iconOption.id} type="button" onClick={() => setSelectedIcon(iconOption.id)} className={`p-2 rounded-md flex flex-col items-center ${selectedIcon === iconOption.id ? 'bg-blue-100 border border-blue-300' : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'}`} title={iconOption.label}>
-                    {iconOption.icon}
-                    <span className="text-xs mt-1">{iconOption.label}</span>
-                  </button>)}
-              </div>
-            </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => {
             setIsCreatingAxis(false);
@@ -453,10 +367,16 @@ const AnalyticsPanel = ({
                 </div>}
             </div>)}
         </div>
-        <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mt-4" onClick={handleSave}>
-          Enregistrer
-        </button>
+        <div className="border-t pt-4 mt-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Les axes sélectionnés seront appliqués à tous les documents
+            sélectionnés. Les axes existants avec le même nom seront remplacés.
+          </p>
+          <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors" onClick={handleSave}>
+            Appliquer aux {selectedCount} document{selectedCount > 1 ? 's' : ''}
+          </button>
+        </div>
       </div>
     </div>;
 };
-export default AnalyticsPanel;
+export default BulkAnalyticsPanel;

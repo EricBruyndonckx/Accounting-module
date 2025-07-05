@@ -554,12 +554,14 @@ const StatCard = ({
   onClick,
   isActive
 }) => {
+  // Determine the color based on the first character of the change string
+  const changeColor = change.startsWith('+') ? 'text-green-500' : change.startsWith('-') ? 'text-red-500' : 'text-gray-500';
   return <div className={`bg-white border ${isActive ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} rounded-lg p-4 flex flex-col cursor-pointer hover:shadow-md transition-all duration-200 ${isActive ? 'shadow-sm' : ''}`} onClick={onClick}>
       <div className="flex items-start">
         <div className="flex-1">
           <div className="text-2xl font-bold">{number}</div>
           <div className="text-sm text-gray-600">{label}</div>
-          <div className="text-xs text-gray-500 mt-1">{change}</div>
+          <div className={`text-xs ${changeColor} mt-1`}>{change}</div>
         </div>
         <div className={`rounded-full p-2 ${color}`}>{icon}</div>
       </div>

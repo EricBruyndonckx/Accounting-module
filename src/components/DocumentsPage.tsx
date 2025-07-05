@@ -289,22 +289,21 @@ const DocumentsPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Date range:
                 </label>
-                <div className="relative">
-                  <select className="w-full border border-gray-300 rounded-md p-2 mb-2" value={dateRange} onChange={e => setDateRange(e.target.value)}>
-                    <option value="">Select a range</option>
-                    <option value="first_campaign">First campaign</option>
-                    <option value="this_week">This week</option>
-                    <option value="this_month">This month</option>
-                    <option value="last_month">Last month</option>
-                    <option value="custom">Custom range</option>
-                  </select>
-                  {(dateRange === 'custom' || dateRange === 'first_campaign') && <div className="flex items-center border border-blue-300 rounded-md p-2 bg-blue-50">
-                      <input type="date" className="flex-1 border-0 bg-transparent p-0 focus:ring-0 text-sm" placeholder="Start date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-                      <span className="px-2 text-gray-500">—</span>
-                      <input type="date" className="flex-1 border-0 bg-transparent p-0 focus:ring-0 text-sm" placeholder="End date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-                      <CalendarIcon size={16} className="text-blue-500 ml-2" />
-                    </div>}
+                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                  <div className="flex-1 relative">
+                    <input type="date" className="w-full border-none p-2 focus:ring-0 focus:outline-none text-sm" placeholder="Start date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                    <CalendarIcon size={16} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                  <div className="px-2 text-gray-400 bg-gray-50">—</div>
+                  <div className="flex-1 relative">
+                    <input type="date" className="w-full border-none p-2 focus:ring-0 focus:outline-none text-sm" placeholder="End date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                    <CalendarIcon size={16} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
+                {startDate && endDate && <div className="mt-1 text-xs text-blue-500">
+                    {new Date(startDate).toLocaleDateString()} -{' '}
+                    {new Date(endDate).toLocaleDateString()}
+                  </div>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

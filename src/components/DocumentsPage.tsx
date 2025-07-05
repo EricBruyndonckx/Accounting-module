@@ -91,9 +91,11 @@ const DocumentsPage = () => {
   const [showAnalyticsPanel, setShowAnalyticsPanel] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [documents, setDocuments] = useState(mockDocuments);
+  const [filteredDocuments, setFilteredDocuments] = useState(mockDocuments);
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [showBulkAnalyticsPanel, setShowBulkAnalyticsPanel] = useState(false);
   const [activeFilters, setActiveFilters] = useState(['All statuses', 'All dates', 'All clients']);
+  const [activeStatCard, setActiveStatCard] = useState(null);
   // Filtres avancés
   const [statusFilter, setStatusFilter] = useState('');
   const [dateRange, setDateRange] = useState('');
@@ -157,6 +159,62 @@ const DocumentsPage = () => {
       sections.push(...axis.sections);
     });
     return sections;
+  };
+  // Fonction pour filtrer les documents par statut
+  const filterDocumentsByStatus = status => {
+    let filtered = [...mockDocuments];
+    // If clicking the already active card, deactivate it
+    if (activeStatCard === status) {
+      setActiveStatCard(null);
+      // Reset to all documents
+      setFilteredDocuments(mockDocuments);
+      setDocuments(mockDocuments);
+      // Reset the status filter in activeFilters
+      setActiveFilters(prev => {
+        const newFilters = prev.filter(f => f !== 'Validated' && f !== 'Pending' && f !== 'Blocked');
+        if (!newFilters.includes('All statuses')) {
+          newFilters.push('All statuses');
+        }
+        return newFilters;
+      });
+      return;
+    }
+    // Set the active card based on the status (exclusive selection)
+    setActiveStatCard(status);
+    // Apply the filter based on status
+    if (status === 'validated') {
+      filtered = filtered.filter(doc => doc.status === 'validated');
+      setActiveFilters(prev => {
+        // Remove any existing status filters
+        const newFilters = prev.filter(f => f !== 'All statuses' && f !== 'Pending' && f !== 'Blocked');
+        if (!newFilters.includes('Validated')) {
+          newFilters.push('Validated');
+        }
+        return newFilters;
+      });
+    } else if (status === 'pending') {
+      filtered = filtered.filter(doc => doc.status === 'pending');
+      setActiveFilters(prev => {
+        // Remove any existing status filters
+        const newFilters = prev.filter(f => f !== 'All statuses' && f !== 'Validated' && f !== 'Blocked');
+        if (!newFilters.includes('Pending')) {
+          newFilters.push('Pending');
+        }
+        return newFilters;
+      });
+    } else if (status === 'blocked') {
+      filtered = filtered.filter(doc => doc.status === 'rejected');
+      setActiveFilters(prev => {
+        // Remove any existing status filters
+        const newFilters = prev.filter(f => f !== 'All statuses' && f !== 'Validated' && f !== 'Pending');
+        if (!newFilters.includes('Blocked')) {
+          newFilters.push('Blocked');
+        }
+        return newFilters;
+      });
+    }
+    setFilteredDocuments(filtered);
+    setDocuments(filtered);
   };
   const handleOpenAnalyticsPanel = document => {
     setSelectedDocument(document);
@@ -364,10 +422,10 @@ const DocumentsPage = () => {
 
         {/* Statistiques */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <StatCard number="12" label="Documents envoyés" change="+3 vs dernier mois" icon={<SendIcon size={24} />} color="bg-blue-100 text-blue-500" />
-          <StatCard number="24" label="Documents traités" change="+5 vs dernier mois" icon={<CheckCircleIcon size={24} />} color="bg-green-100 text-green-500" />
-          <StatCard number="8" label="Documents en attente" change="-2 vs dernier mois" icon={<ClockIcon size={24} />} color="bg-orange-100 text-orange-500" />
-          <StatCard number="3" label="Documents bloqués" change="+1 vs dernier mois" icon={<AlertCircleIcon size={24} />} color="bg-red-100 text-red-500" />
+          <StatCard number="12" label="Documents envoyés" change="+3 vs dernier mois" icon={<SendIcon size={24} />} color="bg-blue-100 text-blue-500" onClick={() => filterDocumentsByStatus('validated')} isActive={activeStatCard === 'validated'} />
+          <StatCard number="24" label="Documents traités" change="+5 vs dernier mois" icon={<CheckCircleIcon size={24} />} color="bg-green-100 text-green-500" onClick={() => filterDocumentsByStatus('validated')} isActive={activeStatCard === 'validated'} />
+          <StatCard number="8" label="Documents en attente" change="-2 vs dernier mois" icon={<ClockIcon size={24} />} color="bg-orange-100 text-orange-500" onClick={() => filterDocumentsByStatus('pending')} isActive={activeStatCard === 'pending'} />
+          <StatCard number="3" label="Documents bloqués" change="+1 vs dernier mois" icon={<AlertCircleIcon size={24} />} color="bg-red-100 text-red-500" onClick={() => filterDocumentsByStatus('blocked')} isActive={activeStatCard === 'blocked'} />
         </div>
 
         {/* Barre de filtres rapides et bouton d'export */}
@@ -441,6 +499,20 @@ const DocumentsPage = () => {
                           </optgroup>)}
                   </select>
                 </div>
+                {/* Active Filters Display */}
+                {activeFilters.length > 0 && activeFilters.some(f => f !== 'All statuses' && f !== 'All dates' && f !== 'All clients') && <div className="flex items-center ml-4">
+                      <span className="text-sm font-medium text-gray-700 mr-2">
+                        Filtered by:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {activeFilters.map((filter, index) => filter !== 'All statuses' && filter !== 'All dates' && filter !== 'All clients' && <div key={index} className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                <span>{filter}</span>
+                                <button className="ml-1 text-blue-500 hover:text-blue-700" onClick={() => removeFilter(filter)}>
+                                  <XIcon size={14} />
+                                </button>
+                              </div>)}
+                      </div>
+                    </div>}
               </>}
           </div>
           <button className="flex items-center gap-2 px-4 py-1.5 text-sm border border-gray-200 rounded-md bg-white hover:bg-gray-50">
@@ -478,15 +550,25 @@ const StatCard = ({
   label,
   change,
   icon,
-  color
+  color,
+  onClick,
+  isActive
 }) => {
-  return <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-start">
-      <div className="flex-1">
-        <div className="text-2xl font-bold">{number}</div>
-        <div className="text-sm text-gray-600">{label}</div>
-        <div className="text-xs text-gray-500 mt-1">{change}</div>
+  return <div className={`bg-white border ${isActive ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} rounded-lg p-4 flex flex-col cursor-pointer hover:shadow-md transition-all duration-200 ${isActive ? 'shadow-sm' : ''}`} onClick={onClick}>
+      <div className="flex items-start">
+        <div className="flex-1">
+          <div className="text-2xl font-bold">{number}</div>
+          <div className="text-sm text-gray-600">{label}</div>
+          <div className="text-xs text-gray-500 mt-1">{change}</div>
+        </div>
+        <div className={`rounded-full p-2 ${color}`}>{icon}</div>
       </div>
-      <div className={`rounded-full p-2 ${color}`}>{icon}</div>
+      <div className="flex items-center mt-3 text-xs text-blue-500 font-medium">
+        <span>Filtrer</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </div>
     </div>;
 };
 export default DocumentsPage;
